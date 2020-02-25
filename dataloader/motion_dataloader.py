@@ -15,8 +15,7 @@ import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from dataloader.split_train_test_video import *
- 
+from dataloader.split_train_test_video import *      #Needed when running from motion_cnn
 class motion_dataset(Dataset):  
     def __init__(self, dic, in_channel, root_dir, mode, transform=None):
         #Generate a 16 Frame clip
@@ -102,7 +101,8 @@ class Motion_DataLoader():
         
     def load_frame_count(self):
         #print '==> Loading frame number of each video'
-        with open('dataloader/dic/frame_count.pickle','rb') as file:
+        # with open('dataloader/dic/frame_count.pickle','rb') as file:        #Needed when running directly
+        with open('dataloader/dic/frame_count.pickle','rb') as file:          #Needed when running from motion_cnn
             dic_frame = pickle.load(file)
         file.close()
 
