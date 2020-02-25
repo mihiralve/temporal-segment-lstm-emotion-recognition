@@ -33,14 +33,14 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='man
 def main():
     global arg
     arg = parser.parse_args()
-    print arg
+    print(arg)
 
     #Prepare DataLoader
     data_loader = dataloader.spatial_dataloader(
                         BATCH_SIZE=arg.batch_size,
                         num_workers=8,
-                        path='/home/ubuntu/data/UCF101/spatial_no_sampled/',
-                        ucf_list ='/home/ubuntu/cvlab/pytorch/ucf101_two_stream/github/UCF_list/',
+                        path='./data/ucf101_jpegs_256/ucf101_jpegs_256/jpegs_256/', 
+                        ucf_list='./UCF_list/',
                         ucf_split ='01', 
                         )
     
@@ -74,7 +74,7 @@ class Spatial_CNN():
         self.test_video=test_video
 
     def build_model(self):
-        print ('==> Build model and setup loss and optimizer')
+        print('==> Build model and setup loss and optimizer')
         #build model
         self.model = resnet101(pretrained= True, channel=3).cuda()
         #Loss function and optimizer
@@ -143,7 +143,7 @@ class Spatial_CNN():
             # measure data loading time
             data_time.update(time.time() - end)
             
-            label = label.cuda(async=True)
+            label = label.cuda(non_blocking=True)
             target_var = Variable(label).cuda()
 
             # compute output
@@ -194,9 +194,9 @@ class Spatial_CNN():
         progress = tqdm(self.test_loader)
         for i, (keys,data,label) in enumerate(progress):
             
-            label = label.cuda(async=True)
-            data_var = Variable(data, volatile=True).cuda(async=True)
-            label_var = Variable(label, volatile=True).cuda(async=True)
+            label = label.cuda(non_blocking=True)
+            data_var = Variable(data, volatile=True).cuda(non_blocking=True)
+            label_var = Variable(label, volatile=True).cuda(non_blocking=True)
 
             # compute output
             output = self.model(data_var)

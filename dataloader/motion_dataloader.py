@@ -15,13 +15,13 @@ import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from split_train_test_video import *
+from dataloader.split_train_test_video import *
  
 class motion_dataset(Dataset):  
     def __init__(self, dic, in_channel, root_dir, mode, transform=None):
         #Generate a 16 Frame clip
-        self.keys=dic.keys()
-        self.values=dic.values()
+        self.keys=list(dic.keys())
+        self.values=list(dic.values())
         self.root_dir = root_dir
         self.transform = transform
         self.mode=mode
@@ -65,14 +65,14 @@ class motion_dataset(Dataset):
         #print ('mode:',self.mode,'calling Dataset:__getitem__ @ idx=%d'%idx)
         
         if self.mode == 'train':
-            self.video, nb_clips = self.keys[idx].split('-')
+            self.video, nb_clips = list(self.keys)[idx].split('-')
             self.clips_idx = random.randint(1,int(nb_clips))
         elif self.mode == 'val':
-            self.video,self.clips_idx = self.keys[idx].split('-')
+            self.video,self.clips_idx = list(self.keys)[idx].split('-')
         else:
             raise ValueError('There are only train and val mode')
 
-        label = self.values[idx]
+        label = list(self.values)[idx]
         label = int(label)-1 
         data = self.stackopf()
 
@@ -102,7 +102,7 @@ class Motion_DataLoader():
         
     def load_frame_count(self):
         #print '==> Loading frame number of each video'
-        with open('dic/frame_count.pickle','rb') as file:
+        with open('dataloader/dic/frame_count.pickle','rb') as file:
             dic_frame = pickle.load(file)
         file.close()
 
@@ -149,7 +149,7 @@ class Motion_DataLoader():
             transforms.Scale([224,224]),
             transforms.ToTensor(),
             ]))
-        print '==> Training data :',len(training_set),' videos',training_set[1][0].size()
+        print('==> Training data :',len(training_set),' videos',training_set[1][0].size())
 
         train_loader = DataLoader(
             dataset=training_set, 
@@ -168,7 +168,7 @@ class Motion_DataLoader():
             transforms.Scale([224,224]),
             transforms.ToTensor(),
             ]))
-        print '==> Validation data :',len(validation_set),' frames',validation_set[1][1].size()
+        print('==> Validation data :',len(validation_set),' frames',validation_set[1][1].size())
         #print validation_set[1]
 
         val_loader = DataLoader(
@@ -181,8 +181,8 @@ class Motion_DataLoader():
 
 if __name__ == '__main__':
     data_loader =Motion_DataLoader(BATCH_SIZE=1,num_workers=1,in_channel=10,
-                                        path='/home/ubuntu/data/UCF101/tvl1_flow/',
-                                        ucf_list='/home/ubuntu/cvlab/pytorch/ucf101_two_stream/github/UCF_list/',
+                                        path='../data/ucf101_tvl1_flow/ucf101_tvl1flow/tvl1_flow/',
+                                        ucf_list='../UCF_list/',
                                         ucf_split='01'
                                         )
     train_loader,val_loader,test_video = data_loader.run()

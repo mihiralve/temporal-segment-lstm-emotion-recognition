@@ -21,11 +21,11 @@ from network import *
 import dataloader
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 parser = argparse.ArgumentParser(description='UCF101 motion stream on resnet101')
 parser.add_argument('--epochs', default=500, type=int, metavar='N', help='number of total epochs')
-parser.add_argument('--batch-size', default=64, type=int, metavar='N', help='mini-batch size (default: 64)')
+parser.add_argument('--batch-size', default=32, type=int, metavar='N', help='mini-batch size (default: 64)')
 parser.add_argument('--lr', default=1e-2, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
@@ -34,14 +34,14 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='man
 def main():
     global arg
     arg = parser.parse_args()
-    print arg
+    print(arg)
 
     #Prepare DataLoader
     data_loader = dataloader.Motion_DataLoader(
                         BATCH_SIZE=arg.batch_size,
                         num_workers=8,
-                        path='/home/ubuntu/data/UCF101/tvl1_flow/',
-                        ucf_list='/home/ubuntu/cvlab/pytorch/ucf101_two_stream/github/UCF_list/',
+                        path='./data/ucf101_tvl1_flow/ucf101_tvl1flow/tvl1_flow/',
+                        ucf_list='./UCF_list/',
                         ucf_split='01',
                         in_channel=10,
                         )
@@ -123,7 +123,7 @@ class Motion_CNN():
             if is_best:
                 self.best_prec1 = prec1
                 with open('record/motion/motion_video_preds.pickle','wb') as f:
-                    pickle.dump(self.dic_video_level_preds,f)
+                    pickle.dump(list(self.dic_video_level_preds),f)
                 f.close() 
             
             save_checkpoint({
@@ -151,7 +151,7 @@ class Motion_CNN():
             # measure data loading time
             data_time.update(time.time() - end)
             
-            label = label.cuda(async=True)
+            label = label.cuda(non_blocking=True)
             input_var = Variable(data).cuda()
             target_var = Variable(label).cuda()
 
@@ -161,9 +161,9 @@ class Motion_CNN():
 
             # measure accuracy and record loss
             prec1, prec5 = accuracy(output.data, label, topk=(1, 5))
-            losses.update(loss.data[0], data.size(0))
-            top1.update(prec1[0], data.size(0))
-            top5.update(prec5[0], data.size(0))
+            losses.update(loss.data, data.size(0))
+            top1.update(prec1, data.size(0))
+            top5.update(prec5, data.size(0))
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
@@ -199,9 +199,9 @@ class Motion_CNN():
         for i, (keys,data,label) in enumerate(progress):
             
             #data = data.sub_(127.353346189).div_(14.971742063)
-            label = label.cuda(async=True)
-            data_var = Variable(data, volatile=True).cuda(async=True)
-            label_var = Variable(label, volatile=True).cuda(async=True)
+            label = label.cuda(non_blocking=True)
+            data_var = Variable(data, volatile=True).cuda(non_blocking=True)
+            label_var = Variable(label, volatile=True).cuda(non_blocking=True)
 
             # compute output
             output = self.model(data_var)
