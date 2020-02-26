@@ -158,9 +158,9 @@ class Spatial_CNN():
 
             # measure accuracy and record loss
             prec1, prec5 = accuracy(output.data, label, topk=(1, 5))
-            losses.update(loss.data[0], data.size(0))
-            top1.update(prec1[0], data.size(0))
-            top5.update(prec5[0], data.size(0))
+            losses.update(loss.data, data.size(0))
+            top1.update(prec1, data.size(0))
+            top5.update(prec5, data.size(0))
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
@@ -174,9 +174,9 @@ class Spatial_CNN():
         info = {'Epoch':[self.epoch],
                 'Batch Time':[round(batch_time.avg,3)],
                 'Data Time':[round(data_time.avg,3)],
-                'Loss':[round(losses.avg,5)],
-                'Prec@1':[round(top1.avg,4)],
-                'Prec@5':[round(top5.avg,4)],
+                'Loss':[round(losses.avg.item(),5)],
+                'Prec@1':[round(top1.avg.item(),4)],
+                'Prec@5':[round(top5.avg.item(),4)],
                 'lr': self.optimizer.param_groups[0]['lr']
                 }
         record_info(info, 'record/spatial/rgb_train.csv','train')
@@ -192,35 +192,36 @@ class Spatial_CNN():
         self.dic_video_level_preds={}
         end = time.time()
         progress = tqdm(self.test_loader)
-        for i, (keys,data,label) in enumerate(progress):
-            
-            label = label.cuda(non_blocking=True)
-            data_var = Variable(data, volatile=True).cuda(non_blocking=True)
-            label_var = Variable(label, volatile=True).cuda(non_blocking=True)
+        with torch.no_grad():
+            for i, (keys,data,label) in enumerate(progress):
 
-            # compute output
-            output = self.model(data_var)
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
-            #Calculate video level prediction
-            preds = output.data.cpu().numpy()
-            nb_data = preds.shape[0]
-            for j in range(nb_data):
-                videoName = keys[j].split('/',1)[0]
-                if videoName not in self.dic_video_level_preds.keys():
-                    self.dic_video_level_preds[videoName] = preds[j,:]
-                else:
-                    self.dic_video_level_preds[videoName] += preds[j,:]
+                label = label.cuda(non_blocking=True)
+                data_var = Variable(data, volatile=True).cuda(non_blocking=True)
+                label_var = Variable(label, volatile=True).cuda(non_blocking=True)
+
+                # compute output
+                output = self.model(data_var)
+                # measure elapsed time
+                batch_time.update(time.time() - end)
+                end = time.time()
+                #Calculate video level prediction
+                preds = output.data.cpu().numpy()
+                nb_data = preds.shape[0]
+                for j in range(nb_data):
+                    videoName = keys[j].split('/',1)[0]
+                    if videoName not in self.dic_video_level_preds.keys():
+                        self.dic_video_level_preds[videoName] = preds[j,:]
+                    else:
+                        self.dic_video_level_preds[videoName] += preds[j,:]
 
         video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
             
 
         info = {'Epoch':[self.epoch],
                 'Batch Time':[round(batch_time.avg,3)],
-                'Loss':[round(video_loss,5)],
-                'Prec@1':[round(video_top1,3)],
-                'Prec@5':[round(video_top5,3)]}
+                'Loss':[video_loss],
+                'Prec@1':[video_top1],
+                'Prec@5':[video_top5]}
         record_info(info, 'record/spatial/rgb_test.csv','test')
         return video_top1, video_loss
 

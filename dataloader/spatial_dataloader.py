@@ -3,14 +3,16 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import random
-from .split_train_test_video import *
+from dataloader.split_train_test_video import *    #Needed when running from spatial_cnn
+# from split_train_test_video import *        #Needed when running directly
+
 from skimage import io, color, exposure
 
 class spatial_dataset(Dataset):  
     def __init__(self, dic, root_dir, mode, transform=None):
  
-        self.keys = dic.keys()
-        self.values=dic.values()
+        self.keys = list(dic.keys())
+        self.values = list(dic.values())
         self.root_dir = root_dir
         self.mode =mode
         self.transform = transform
@@ -22,11 +24,13 @@ class spatial_dataset(Dataset):
         if video_name.split('_')[0] == 'HandstandPushups':
             n,g = video_name.split('_',1)
             name = 'HandStandPushups_'+g
-            path = self.root_dir + 'HandstandPushups'+'/v_'+name+'/v_'+name+'_'
+            path = self.root_dir + '/v_'+name+'/frame'
         else:
-            path = self.root_dir + video_name.split('_')[0]+'/v_'+video_name+'/v_'+video_name+'_'
-         
-        img = Image.open(path +str(index)+'.jpg')
+            # path = self.root_dir + video_name.split('_')[0]+'/v_'+video_name+'/v_'+video_name+'_'
+            path = self.root_dir + 'v_'+video_name+'/frame'
+        indStr = str(index).zfill(6)
+
+        img = Image.open(path +str(indStr)+'.jpg')
         transformed_img = self.transform(img)
         img.close()
 
@@ -80,7 +84,8 @@ class spatial_dataloader():
 
     def load_frame_count(self):
         #print '==> Loading frame number of each video'
-        with open('dataloader/dic/frame_count.pickle','rb') as file:
+        # with open('dic/frame_count.pickle','rb') as file:                 #Needed when running directly
+        with open('dataloader/dic/frame_count.pickle','rb') as file:        #Needed when running from spatial_cnn
             dic_frame = pickle.load(file)
         file.close()
 
