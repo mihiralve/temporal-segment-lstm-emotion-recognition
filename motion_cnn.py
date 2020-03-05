@@ -39,10 +39,10 @@ def main():
     #Prepare DataLoader
     data_loader = dataloader.Motion_DataLoader(
                         BATCH_SIZE=arg.batch_size,
-                        num_workers=8,
-                        path='./data/ucf101_tvl1_flow/ucf101_tvl1flow/tvl1_flow/',
-                        ucf_list='./UCF_list/',
-                        ucf_split='01',
+                        num_workers=0,
+                        path='../bold_data/BOLD_ijcv/BOLD_public/optic_flow/',
+                        ucf_list = '../bold_data/BOLD_ijcv/BOLD_public/annotations/',
+                        ucf_split = '02',
                         in_channel=10,
                         )
     
@@ -60,7 +60,7 @@ def main():
                         nb_epochs=arg.epochs,
                         lr=arg.lr,
                         batch_size=arg.batch_size,
-                        channel = 10*2,
+                        channel = 10,
                         test_video=test_video
                         )
     #Training
@@ -240,7 +240,7 @@ class Motion_CNN():
     def frame2_video_level_accuracy(self):
      
         correct = 0
-        video_level_preds = np.zeros((len(self.dic_video_level_preds),101))
+        video_level_preds = np.zeros((len(self.dic_video_level_preds),26))
         video_level_labels = np.zeros(len(self.dic_video_level_preds))
         ii=0
         for key in sorted(self.dic_video_level_preds.keys()):

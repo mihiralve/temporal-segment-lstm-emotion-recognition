@@ -38,10 +38,10 @@ def main():
     #Prepare DataLoader
     data_loader = dataloader.spatial_dataloader(
                         BATCH_SIZE=arg.batch_size,
-                        num_workers=8,
-                        path='./data/ucf101_jpegs_256/ucf101_jpegs_256/jpegs_256/', 
-                        ucf_list='./UCF_list/',
-                        ucf_split ='01', 
+                        num_workers=0,
+                        path='../bold_data/BOLD_ijcv/BOLD_public/frames/',
+                        ucf_list = '../bold_data/BOLD_ijcv/BOLD_public/annotations/',
+                        ucf_split = '01'
                         )
     
     train_loader, test_loader, test_video = data_loader.run()
@@ -147,7 +147,7 @@ class Spatial_CNN():
             target_var = Variable(label).cuda()
 
             # compute output
-            output = Variable(torch.zeros(len(data_dict['img1']),101).float()).cuda()
+            output = Variable(torch.zeros(len(data_dict['img1']),26).float()).cuda()
             for i in range(len(data_dict)):
                 key = 'img'+str(i)
                 data = data_dict[key]
@@ -208,7 +208,7 @@ class Spatial_CNN():
                 preds = output.data.cpu().numpy()
                 nb_data = preds.shape[0]
                 for j in range(nb_data):
-                    videoName = keys[j].split('/',1)[0]
+                    videoName = keys[j]
                     if videoName not in self.dic_video_level_preds.keys():
                         self.dic_video_level_preds[videoName] = preds[j,:]
                     else:
@@ -228,13 +228,13 @@ class Spatial_CNN():
     def frame2_video_level_accuracy(self):
             
         correct = 0
-        video_level_preds = np.zeros((len(self.dic_video_level_preds),101))
+        video_level_preds = np.zeros((len(self.dic_video_level_preds),26))
         video_level_labels = np.zeros(len(self.dic_video_level_preds))
         ii=0
         for name in sorted(self.dic_video_level_preds.keys()):
         
             preds = self.dic_video_level_preds[name]
-            label = int(self.test_video[name])-1
+            label = int(self.test_video[name])
                 
             video_level_preds[ii,:] = preds
             video_level_labels[ii] = label
