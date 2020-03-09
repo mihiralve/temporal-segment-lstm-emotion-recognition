@@ -41,7 +41,7 @@ def main():
                         num_workers=0,
                         path='../bold_data/BOLD_ijcv/BOLD_public/frames/',
                         ucf_list = '../bold_data/BOLD_ijcv/BOLD_public/annotations/',
-                        ucf_split = '01'
+                        ucf_split = '04'
                         )
     
     train_loader, test_loader, test_video = data_loader.run()
@@ -78,10 +78,14 @@ class Spatial_CNN():
         #build model
         self.model = resnet101(pretrained= True, channel=3).cuda()
         #Loss function and optimizer
-        self.criterion = nn.CrossEntropyLoss().cuda()
+        self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
-    
+
+    def custom_cross_entropy_loss(self, output, target):
+        out_sm = nn.Softmax(dim=1)(output)
+        return -(target * torch.log(out_sm))
+
     def resume_and_evaluate(self):
         if self.resume:
             if os.path.isfile(self.resume):
@@ -157,14 +161,14 @@ class Spatial_CNN():
             loss = self.criterion(output, target_var)
 
             # measure accuracy and record loss
-            prec1, prec5 = accuracy(output.data, label, topk=(1, 5))
-            losses.update(loss.data, data.size(0))
-            top1.update(prec1, data.size(0))
-            top5.update(prec5, data.size(0))
+            # prec1, prec5 = accuracy(output.data, label, topk=(1, 5))
+            losses.update(loss.mean().data, data.size(0))
+            # top1.update(prec1, data.size(0))
+            # top5.update(prec5, data.size(0))
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
-            loss.backward()
+            loss.mean().backward()
             self.optimizer.step()
 
             # measure elapsed time
@@ -175,8 +179,8 @@ class Spatial_CNN():
                 'Batch Time':[round(batch_time.avg,3)],
                 'Data Time':[round(data_time.avg,3)],
                 'Loss':[round(losses.avg.item(),5)],
-                'Prec@1':[round(top1.avg.item(),4)],
-                'Prec@5':[round(top5.avg.item(),4)],
+                # 'Prec@1':[round(top1.avg.item(),4)],
+                # 'Prec@5':[round(top5.avg.item(),4)],
                 'lr': self.optimizer.param_groups[0]['lr']
                 }
         record_info(info, 'record/spatial/rgb_train.csv','train')
@@ -196,11 +200,12 @@ class Spatial_CNN():
             for i, (keys,data,label) in enumerate(progress):
 
                 label = label.cuda(non_blocking=True)
-                data_var = Variable(data, volatile=True).cuda(non_blocking=True)
-                label_var = Variable(label, volatile=True).cuda(non_blocking=True)
+                data_var = Variable(data).cuda(non_blocking=True)
+                label_var = Variable(label).cuda(non_blocking=True)
 
                 # compute output
                 output = self.model(data_var)
+                output = nn.Softmax(dim=1)(output)
                 # measure elapsed time
                 batch_time.update(time.time() - end)
                 end = time.time()
@@ -219,38 +224,53 @@ class Spatial_CNN():
 
         info = {'Epoch':[self.epoch],
                 'Batch Time':[round(batch_time.avg,3)],
-                'Loss':[video_loss],
+                'Loss':[np.average(video_loss)],
                 'Prec@1':[video_top1],
                 'Prec@5':[video_top5]}
         record_info(info, 'record/spatial/rgb_test.csv','test')
-        return video_top1, video_loss
+        return video_top1, video_loss.mean()
 
     def frame2_video_level_accuracy(self):
             
         correct = 0
         video_level_preds = np.zeros((len(self.dic_video_level_preds),26))
-        video_level_labels = np.zeros(len(self.dic_video_level_preds))
+        video_level_labels = np.zeros((len(self.dic_video_level_preds),26))
         ii=0
+        
+        top1 = 0
+        top5 = 0
+        
         for name in sorted(self.dic_video_level_preds.keys()):
         
             preds = self.dic_video_level_preds[name]
-            label = int(self.test_video[name])
+            label = list(self.test_video[name])
+            label = np.array(label).astype(np.float64)
                 
             video_level_preds[ii,:] = preds
-            video_level_labels[ii] = label
+            video_level_labels[ii,:] = label
             ii+=1         
-            if np.argmax(preds) == (label):
-                correct+=1
+            
+            # threshold = 0.5
+            
+            # if np.average(np.abs(preds-label)) < threshold:
+            #     correct+=1
+            
+            if np.average(np.abs(preds-label)) < 0.1:
+                top1 += 1
+                
+            if np.average(np.abs(preds-label)) < 0.5:
+                top5 += 1
+            
 
         #top1 top5
-        video_level_labels = torch.from_numpy(video_level_labels).long()
+        video_level_labels = torch.from_numpy(video_level_labels).float()
         video_level_preds = torch.from_numpy(video_level_preds).float()
             
-        top1,top5 = accuracy(video_level_preds, video_level_labels, topk=(1,5))
+        # top1,top5 = accuracy(video_level_preds, video_level_labels, topk=(1,5))
         loss = self.criterion(Variable(video_level_preds).cuda(), Variable(video_level_labels).cuda())     
                             
-        top1 = float(top1.numpy())
-        top5 = float(top5.numpy())
+        # top1 = 0 #float(top1.numpy())
+        # top5 = 0 #float(top5.numpy())
             
         #print(' * Video level Prec@1 {top1:.3f}, Video level Prec@5 {top5:.3f}'.format(top1=top1, top5=top5))
         return top1,top5,loss.data.cpu().numpy()

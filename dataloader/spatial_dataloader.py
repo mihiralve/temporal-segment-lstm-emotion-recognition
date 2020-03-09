@@ -1,10 +1,11 @@
 import pickle
+import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import random
-# from dataloader.split_train_test_video_2 import *    #Needed when running from spatial_cnn
-from split_train_test_video_2 import *        #Needed when running directly
+from dataloader.split_train_test_video_2 import *    #Needed when running from spatial_cnn
+# from split_train_test_video_2 import *        #Needed when running directly
 
 from skimage import io, color, exposure
 
@@ -53,7 +54,7 @@ class spatial_dataset(Dataset):
             raise ValueError('There are only train and val mode')
 
         label = list(self.values)[idx]
-        label = int(label)
+        label = np.array(label).astype(np.float64)
         
         if self.mode=='train':
             data ={}
@@ -95,8 +96,8 @@ class spatial_dataloader():
         #     if n == 'HandStandPushups':
         #         videoname = 'HandstandPushups_'+ g
         #     self.frame_count[videoname]=dic_frame[line]
-        with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
-        # with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):
@@ -123,7 +124,7 @@ class spatial_dataloader():
         self.dic_testing={}
         for video in self.test_video:
             # nb_frame = self.frame_count[video]-10+1
-            nb_frame = self.frame_count[video]
+            nb_frame = self.frame_count[video]-10+1
             interval = int(nb_frame/19)
             for i in range(19):
                 frame = i*interval
