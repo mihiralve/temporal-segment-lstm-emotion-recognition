@@ -69,14 +69,14 @@ class motion_dataset(Dataset):
         
         if self.mode == 'train':
             self.video, nb_clips = list(self.keys)[idx].split('-')
-            self.clips_idx = random.randint(1,int(nb_clips))
+            self.clips_idx = random.randint(1,int(nb_clips)-1)
         elif self.mode == 'val':
             self.video,self.clips_idx = list(self.keys)[idx].split('-')
         else:
             raise ValueError('There are only train and val mode')
 
         label = list(self.values)[idx]
-        label = int(label)-1 
+        label = np.array(label).astype(np.float64)
         data = self.stackopf()
 
         if self.mode == 'train':
@@ -116,8 +116,8 @@ class Motion_DataLoader():
         #     if n == 'HandStandPushups':
         #         videoname = 'HandstandPushups_'+ g
         #     self.frame_count[videoname]=dic_frame[line]
-        # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount03.pkl", "rb") as f:
-        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount03.pkl", "rb") as f:
+        # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):
@@ -192,6 +192,6 @@ if __name__ == '__main__':
     data_loader =Motion_DataLoader(BATCH_SIZE=1,num_workers=1,in_channel=10,
                                         path='../../bold_data/BOLD_ijcv/BOLD_public/optic_flow/',
                                         ucf_list = '../../bold_data/BOLD_ijcv/BOLD_public/annotations/',
-                                        ucf_split = '03')
+                                        ucf_split = '04')
     train_loader,val_loader,test_video = data_loader.run()
     #print train_loader,val_loader

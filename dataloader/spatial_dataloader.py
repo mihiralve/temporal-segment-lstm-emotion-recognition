@@ -97,7 +97,7 @@ class spatial_dataloader():
         #         videoname = 'HandstandPushups_'+ g
         #     self.frame_count[videoname]=dic_frame[line]
         # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
-        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount03.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):
