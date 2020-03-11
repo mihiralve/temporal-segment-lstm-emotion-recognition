@@ -151,7 +151,7 @@ class Spatial_CNN():
             target_var = Variable(label).cuda()
 
             # compute output
-            output = Variable(torch.zeros(len(data_dict['img1']),26).float()).cuda()
+            output = Variable(torch.zeros(len(data_dict['img0']),26).float()).cuda()
             for i in range(len(data_dict)):
                 key = 'img'+str(i)
                 data = data_dict[key]

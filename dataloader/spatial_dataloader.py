@@ -43,9 +43,10 @@ class spatial_dataset(Dataset):
             video_name, nb_clips = list(self.keys)[idx].split(' ')
             nb_clips = int(nb_clips)
             clips = []
-            clips.append(random.randint(1, int(nb_clips/3)))
-            clips.append(random.randint(int(nb_clips/3), int(nb_clips*2/3)))
-            clips.append(random.randint(int(nb_clips*2/3), int(nb_clips)))
+            clips.append(random.randint(1, nb_clips))
+            # clips.append(random.randint(1, int(nb_clips/3)))
+            # clips.append(random.randint(int(nb_clips/3), int(nb_clips*2/3)))
+            # clips.append(random.randint(int(nb_clips*2/3), int(nb_clips)))
             
         elif self.mode == 'val':
             video_name, index = list(self.keys)[idx].split(' ')
@@ -97,7 +98,7 @@ class spatial_dataloader():
         #         videoname = 'HandstandPushups_'+ g
         #     self.frame_count[videoname]=dic_frame[line]
         # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
-        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount03.pkl", "rb") as f:
+        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):
@@ -139,7 +140,7 @@ class spatial_dataloader():
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]) ##Do I need to change the normalization constants
                 ]))
         print('==> Training data :',len(training_set),'frames')
-        print(training_set[1][0]['img1'].size())
+        print(training_set[1][0]['img0'].size())
 
         train_loader = DataLoader(
             dataset=training_set, 
