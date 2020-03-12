@@ -160,11 +160,8 @@ class Spatial_CNN():
 
             loss = self.criterion(output, target_var)
 
-            # measure accuracy and record loss
-            # prec1, prec5 = accuracy(output.data, label, topk=(1, 5))
+            # record loss
             losses.update(loss.mean().data, data.size(0))
-            # top1.update(prec1, data.size(0))
-            # top5.update(prec5, data.size(0))
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
@@ -179,8 +176,6 @@ class Spatial_CNN():
                 'Batch Time':[round(batch_time.avg,3)],
                 'Data Time':[round(data_time.avg,3)],
                 'Loss':[round(losses.avg.item(),5)],
-                # 'Prec@1':[round(top1.avg.item(),4)],
-                # 'Prec@5':[round(top5.avg.item(),4)],
                 'lr': self.optimizer.param_groups[0]['lr']
                 }
         record_info(info, 'record/spatial/rgb_train.csv','train')
@@ -250,10 +245,6 @@ class Spatial_CNN():
             video_level_labels[ii,:] = label
             ii+=1         
             
-            # threshold = 0.5
-            
-            # if np.average(np.abs(preds-label)) < threshold:
-            #     correct+=1
             
             if np.average(np.abs(preds-label)) < 0.1:
                 top1 += 1
@@ -266,19 +257,9 @@ class Spatial_CNN():
         video_level_labels = torch.from_numpy(video_level_labels).float()
         video_level_preds = torch.from_numpy(video_level_preds).float()
             
-        # top1,top5 = accuracy(video_level_preds, video_level_labels, topk=(1,5))
         loss = self.criterion(Variable(video_level_preds).cuda(), Variable(video_level_labels).cuda())     
-                            
-        # top1 = 0 #float(top1.numpy())
-        # top5 = 0 #float(top5.numpy())
-            
-        #print(' * Video level Prec@1 {top1:.3f}, Video level Prec@5 {top5:.3f}'.format(top1=top1, top5=top5))
+
         return top1,top5,loss.data.cpu().numpy()
-
-
-
-
-
 
 
 if __name__=='__main__':

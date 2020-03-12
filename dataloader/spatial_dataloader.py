@@ -22,12 +22,6 @@ class spatial_dataset(Dataset):
         return len(self.keys)
 
     def load_ucf_image(self,video_name, index):
-        # if video_name.split('_')[0] == 'HandstandPushups':
-        #     n,g = video_name.split('_',1)
-        #     name = 'HandStandPushups_'+g
-        #     path = self.root_dir + '/v_'+name+'/frame'
-        # else:
-        #     # path = self.root_dir + video_name.split('_')[0]+'/v_'+video_name+'/v_'+video_name+'_'
         path = self.root_dir + video_name+'/frame'
         indStr = str(index).zfill(4)
 
@@ -43,10 +37,10 @@ class spatial_dataset(Dataset):
             video_name, nb_clips = list(self.keys)[idx].split(' ')
             nb_clips = int(nb_clips)
             clips = []
-            clips.append(random.randint(1, nb_clips))
-            # clips.append(random.randint(1, int(nb_clips/3)))
-            # clips.append(random.randint(int(nb_clips/3), int(nb_clips*2/3)))
-            # clips.append(random.randint(int(nb_clips*2/3), int(nb_clips)))
+
+            segments = 5
+            for i in range(segments):
+                clips.append(random.randint(int((nb_clips/segments) * i), int((nb_clips/segments) * (i+1) -1)))
             
         elif self.mode == 'val':
             video_name, index = list(self.keys)[idx].split(' ')
@@ -85,20 +79,8 @@ class spatial_dataloader():
         self.train_video, self.test_video = splitter.split_video()
 
     def load_frame_count(self):
-        # #print '==> Loading frame number of each video'
-        # with open('dic/frame_count.pickle','rb') as file:                 #Needed when running directly
-        # # with open('dataloader/dic/frame_count.pickle','rb') as file:        #Needed when running from spatial_cnn
-        #     dic_frame = pickle.load(file)
-        # file.close()
-
-        # for line in dic_frame :
-        #     videoname = line.split('_',1)[1].split('.',1)[0]
-        #     n,g = videoname.split('_',1)
-        #     if n == 'HandStandPushups':
-        #         videoname = 'HandstandPushups_'+ g
-        #     self.frame_count[videoname]=dic_frame[line]
-        # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
-        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        # with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):

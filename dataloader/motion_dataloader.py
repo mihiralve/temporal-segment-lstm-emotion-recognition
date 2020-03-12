@@ -45,18 +45,9 @@ class motion_dataset(Dataset):
             idx = i + j
             idx = str(idx)
             frame_idx = idx.zfill(6) + "-vis.png"
-            # h_image = u +'/' + frame_idx +'.jpg'
-            # v_image = v +'/' + frame_idx +'.jpg'
-
-            # imgH=(Image.open(h_image))
-            # imgV=(Image.open(v_image))
 
             img = (Image.open(flow_dir + frame_idx))
             img = self.transform(img)
-
-
-            # H = self.transform(imgH)
-            # V = self.transform(imgV)
             
             flow[j-1,:,:] = img
         return flow
@@ -104,20 +95,8 @@ class Motion_DataLoader():
         self.train_video, self.test_video = splitter.split_video()
         
     def load_frame_count(self):
-        # #print '==> Loading frame number of each video'
-        # with open('dic/frame_count.pickle','rb') as file:        #Needed when running directly
-        # # with open('dataloader/dic/frame_count.pickle','rb') as file:          #Needed when running from motion_cnn
-        #     dic_frame = pickle.load(file)
-        # file.close()
-
-        # for line in dic_frame :
-        #     videoname = line.split('_',1)[1].split('.',1)[0]
-        #     n,g = videoname.split('_',1)
-        #     if n == 'HandStandPushups':
-        #         videoname = 'HandstandPushups_'+ g
-        #     self.frame_count[videoname]=dic_frame[line]
-        # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
-        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        # with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):
@@ -133,7 +112,6 @@ class Motion_DataLoader():
         self.dic_test_idx = {}
         #print len(self.test_video)
         for video in self.test_video:
-            # n,g = video.split('_',1)
 
             sampling_interval = int((self.frame_count[video]-10+1)/19)
             for index in range(19):
@@ -157,7 +135,7 @@ class Motion_DataLoader():
             transforms.Grayscale(),
             transforms.ToTensor(),
             ]))
-        print('==> Training data :',len(training_set),' videos',training_set[1][0].size())
+        print('==> Training data :',len(training_set),' videos',training_set[0][0].size())
 
         train_loader = DataLoader(
             dataset=training_set, 
