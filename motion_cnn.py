@@ -86,7 +86,7 @@ class Motion_CNN():
         self.model = resnet101(pretrained= True, channel=self.channel).cuda()
         #print self.model
         #Loss function and optimizer
-        self.criterion = self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
+        self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
 
@@ -150,17 +150,22 @@ class Motion_CNN():
         end = time.time()
         # mini-batch training
         progress = tqdm(self.train_loader)
-        for i, (data,label) in enumerate(progress):
+        for i, (data_dict,label) in enumerate(progress):
 
             # measure data loading time
             data_time.update(time.time() - end)
             
             label = label.cuda(non_blocking=True)
-            input_var = Variable(data).cuda()
             target_var = Variable(label).cuda()
 
             # compute output
-            output = self.model(input_var)
+            output = Variable(torch.zeros(len(data_dict['opf0']),26).float()).cuda()
+            for i in range(len(data_dict)):
+                key = 'opf'+str(i)
+                data = data_dict[key]
+                input_var = Variable(data).cuda()
+                output += self.model(input_var)
+
             loss = self.criterion(output, target_var)
 
             # record loss
@@ -259,7 +264,7 @@ class Motion_CNN():
         video_level_labels = torch.from_numpy(video_level_labels).float()
         video_level_preds = torch.from_numpy(video_level_preds).float()
 
-        loss = self.criterion(Variable(video_level_preds).cuda(), Variable(video_level_labels).cuda())    
+        loss = self.criterion(Variable(video_level_preds).cuda(), Variable(video_level_labels).cuda())
 
         return top1,top5,loss.data.cpu().numpy()
 

@@ -59,8 +59,11 @@ class motion_dataset(Dataset):
         #print ('mode:',self.mode,'calling Dataset:__getitem__ @ idx=%d'%idx)
         
         if self.mode == 'train':
-            self.video, nb_clips = list(self.keys)[idx].split('-')
-            self.clips_idx = random.randint(1,int(nb_clips)-1)
+            self.video, nb_clips = list(self.keys)[idx].split(':')
+            clips = []
+            segments = 1
+            for i in range(segments):
+                clips.append(random.randint(int((int(nb_clips)/segments) * i), int((int(nb_clips)/segments) * (i+1) -1)))
         elif self.mode == 'val':
             self.video,self.clips_idx = list(self.keys)[idx].split('-')
         else:
@@ -68,18 +71,20 @@ class motion_dataset(Dataset):
 
         label = list(self.values)[idx]
         label = np.array(label).astype(np.float64)
-        data = self.stackopf()
 
         if self.mode == 'train':
+            data = {}
+            for i in range(len(clips)):
+                key = 'opf'+str(i)
+                self.clips_idx = clips[i]
+                data[key] = self.stackopf()
             sample = (data,label)
         elif self.mode == 'val':
+            data = self.stackopf()
             sample = (self.video,data,label)
         else:
             raise ValueError('There are only train and val mode')
         return sample
-
-
-
 
 
 class Motion_DataLoader():
@@ -135,7 +140,7 @@ class Motion_DataLoader():
             transforms.Grayscale(),
             transforms.ToTensor(),
             ]))
-        print('==> Training data :',len(training_set),' videos',training_set[0][0].size())
+        print('==> Training data :',len(training_set),' videos',training_set[0][0]['opf0'].size())
 
         train_loader = DataLoader(
             dataset=training_set, 
