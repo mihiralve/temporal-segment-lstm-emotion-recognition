@@ -116,11 +116,9 @@ class Spatial_CNN():
             #lr_scheduler
             self.scheduler.step(val_loss)
             # save model
-            if is_best:
-                self.best_prec1 = prec1
-                with open('record/spatial/spatial_video_preds.pickle','wb') as f:
-                    pickle.dump(self.dic_video_level_preds,f)
-                f.close()
+            with open('record/spatial/spatial_video_preds.pickle','wb') as f:
+                pickle.dump(self.dic_video_level_preds,f)
+            f.close()
             
             save_checkpoint({
                 'epoch': self.epoch,
