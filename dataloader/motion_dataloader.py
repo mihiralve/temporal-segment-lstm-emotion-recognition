@@ -65,7 +65,7 @@ class motion_dataset(Dataset):
             for i in range(segments):
                 clips.append(random.randint(int((int(nb_clips)/segments) * i), int((int(nb_clips)/segments) * (i+1) -1)))
         elif self.mode == 'val':
-            self.video,self.clips_idx = list(self.keys)[idx].split('-')
+            self.video,self.clips_idx = list(self.keys)[idx].split(':')
         else:
             raise ValueError('There are only train and val mode')
 
@@ -121,7 +121,7 @@ class Motion_DataLoader():
             sampling_interval = int((self.frame_count[video]-10+1)/19)
             for index in range(19):
                 clip_idx = index*sampling_interval
-                key = video + '-' + str(clip_idx+1)
+                key = video + ':' + str(clip_idx+1)
                 self.dic_test_idx[key] = self.test_video[video]
              
     def get_training_dic(self):
@@ -129,7 +129,7 @@ class Motion_DataLoader():
         for video in self.train_video:
             
             nb_clips = self.frame_count[video]-10+1
-            key = video +'-' + str(nb_clips)
+            key = video +':' + str(nb_clips)
             self.dic_video_train[key] = self.train_video[video] 
                             
     def train(self):
