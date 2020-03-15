@@ -147,8 +147,8 @@ class Motion_DataLoader():
             batch_size=self.BATCH_SIZE,
             shuffle=True,
             num_workers=self.num_workers,
-            pin_memory=True
-            )
+            pin_memory=True,
+            drop_last=True)
 
         return train_loader
 
@@ -167,7 +167,8 @@ class Motion_DataLoader():
             dataset=validation_set, 
             batch_size=self.BATCH_SIZE, 
             shuffle=False,
-            num_workers=self.num_workers)
+            num_workers=self.num_workers,
+            drop_last=True)
 
         return val_loader
 

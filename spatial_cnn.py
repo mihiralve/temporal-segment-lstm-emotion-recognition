@@ -19,6 +19,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 import dataloader
 from utils import *
 from network import *
+from network import LSTM
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -81,6 +82,7 @@ class Spatial_CNN():
         self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
+        self.lstm = LSTM(26, 26, self.batch_size, output_dim=26)
 
     def custom_cross_entropy_loss(self, output, target):
         out_sm = nn.Softmax(dim=1)(output)
@@ -157,6 +159,7 @@ class Spatial_CNN():
                 data = data_dict[key]
                 input_var = Variable(data).cuda()
                 output += self.model(input_var)
+                output = self.lstm(output).view(-1, self.batch_size, 26)
 
             loss = self.criterion(output, target_var)
 
@@ -200,6 +203,7 @@ class Spatial_CNN():
 
                 # compute output
                 output = self.model(data_var)
+                output = self.lstm(output).view(-1, 26)
                 output = nn.Softmax(dim=1)(output)
                 # measure elapsed time
                 batch_time.update(time.time() - end)

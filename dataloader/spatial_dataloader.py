@@ -128,7 +128,8 @@ class spatial_dataloader():
             dataset=training_set, 
             batch_size=self.BATCH_SIZE,
             shuffle=True,
-            num_workers=self.num_workers)
+            num_workers=self.num_workers,
+            drop_last=True)
         return train_loader
 
     def validate(self):
@@ -145,7 +146,8 @@ class spatial_dataloader():
             dataset=validation_set, 
             batch_size=self.BATCH_SIZE, 
             shuffle=False,
-            num_workers=self.num_workers)
+            num_workers=self.num_workers,
+            drop_last=True)
         return val_loader
 
 
