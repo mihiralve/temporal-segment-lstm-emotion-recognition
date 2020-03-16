@@ -49,6 +49,49 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
+class mAPMeter():
+    def __init__(self, data_len=26):
+        self.count = 0
+        self.precision = []
+        self.recall_data = []
+        self.recall_sums = np.zeros(data_len)
+
+        self.precision.append(np.zeros(data_len))
+
+    def add(self, output, target, threshold):
+
+        diff = np.abs(output - target)
+
+        diff = diff < threshold
+
+        binary = []
+        for x in diff:
+            if x:
+                binary.append(1)
+            else:
+                binary.append(0)
+
+        self.calc_precision_recall(binary)
+        self.track_recall(binary)
+
+    def calc_precision(self, binary):
+
+        self.count += 1
+        self.precision.append(np.zeros(len(binary)))
+
+        self.precision[self.count] = (((self.count-1) * self.precision[self.count-1]) + binary)/self.count
+
+        self.recall_data.append(binary)
+
+    def track_recall(self, binary):
+
+        self.recall_data.append(binary)
+        self.recall_sums += binary
+
+    def calc_recall(self):
+        pass
+
+
 def save_checkpoint(state, is_best, checkpoint, model_best):
     torch.save(state, checkpoint)
     if is_best:

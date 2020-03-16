@@ -184,6 +184,7 @@ class Spatial_CNN():
         losses = AverageMeter()
         top1 = AverageMeter()
         top5 = AverageMeter()
+        ap = mAPMeter()
         # switch to evaluate mode
         self.model.eval()
         self.dic_video_level_preds={}
@@ -195,7 +196,6 @@ class Spatial_CNN():
                 label = label.cuda(non_blocking=True)
                 data_var = Variable(data).cuda(non_blocking=True)
                 label_var = Variable(label).cuda(non_blocking=True)
-
                 # compute output
                 output = self.model(data_var)
                 output = nn.Softmax(dim=1)(output)
@@ -211,6 +211,7 @@ class Spatial_CNN():
                         self.dic_video_level_preds[videoName] = preds[j,:]
                     else:
                         self.dic_video_level_preds[videoName] += preds[j,:]
+                    ap.add(preds[j,:], label[j, :].data.cpu().numpy(), 0.05)
 
         video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
             
@@ -236,6 +237,7 @@ class Spatial_CNN():
         for name in sorted(self.dic_video_level_preds.keys()):
         
             preds = self.dic_video_level_preds[name]
+            preds = preds/preds.sum()
             label = list(self.test_video[name])
             label = np.array(label).astype(np.float64)
                 

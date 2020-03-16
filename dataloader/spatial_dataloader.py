@@ -38,7 +38,7 @@ class spatial_dataset(Dataset):
             nb_clips = int(nb_clips)
             clips = []
 
-            segments = 5
+            segments = 1
             for i in range(segments):
                 clips.append(random.randint(int((nb_clips/segments) * i), int((nb_clips/segments) * (i+1) -1)))
             
@@ -79,8 +79,8 @@ class spatial_dataloader():
         self.train_video, self.test_video = splitter.split_video()
 
     def load_frame_count(self):
-        with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
-        # with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):
