@@ -26,6 +26,7 @@ if __name__ == '__main__':
                         )
     train_loader,val_loader,test_video = data_loader.run()
 
+    ap = mAPMeter()
     video_level_preds = np.zeros((len(rgb.keys()),26))
     video_level_labels = np.zeros((len(rgb.keys()),26))
     correct=0
@@ -51,8 +52,12 @@ if __name__ == '__main__':
         if np.average(np.abs(preds-label)) < 0.05:
                 top5 += 1
 
+        ap.add(preds, label, 0.05)
+        
+    
+
     video_level_labels = torch.from_numpy(video_level_labels).long()
     video_level_preds = torch.from_numpy(video_level_preds).float()
 
 
-    print(top1,top5)
+    print(ap.results())

@@ -193,6 +193,7 @@ class Motion_CNN():
         losses = AverageMeter()
         top1 = AverageMeter()
         top5 = AverageMeter()
+        ap = mAPMeter()
         # switch to evaluate mode
         self.model.eval()
         self.dic_video_level_preds={}
@@ -221,15 +222,18 @@ class Motion_CNN():
                         self.dic_video_level_preds[videoName] = preds[j,:]
                     else:
                         self.dic_video_level_preds[videoName] += preds[j,:]
+                    ap.add(preds[j,:], label[j, :].data.cpu().numpy(), 0.05)
                     
         #Frame to video level accuracy
         video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
+        mean_average_precision = ap.results()
+
         info = {'Epoch':[self.epoch],
                 'Batch Time':[round(batch_time.avg,3)],
                 'Loss':[np.average(video_loss)],
                 'Prec@1':[video_top1],
-                'Prec@5':[video_top5]
-                }
+                'Prec@5':[video_top5],
+                'Mean Average Precision': mean_average_precision}
         record_info(info, 'record/motion/opf_test.csv','test')
         return video_top1, video_loss.mean()
 

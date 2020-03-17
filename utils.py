@@ -1,6 +1,7 @@
 import pickle,os
 from PIL import Image
 import scipy.io
+from scipy import integrate
 import time
 from tqdm import tqdm
 import pandas as pd
@@ -52,9 +53,13 @@ class AverageMeter(object):
 class mAPMeter():
     def __init__(self, data_len=26):
         self.count = 0
+        self.data_len = data_len
         self.precision = []
-        self.recall_data = []
+        self.recall = []
         self.recall_sums = np.zeros(data_len)
+        self.AP = np.zeros(data_len)
+        self.mAP = 0
+
 
         self.precision.append(np.zeros(data_len))
 
@@ -71,25 +76,43 @@ class mAPMeter():
             else:
                 binary.append(0)
 
-        self.calc_precision_recall(binary)
+        self.track_precision(binary)
         self.track_recall(binary)
 
-    def calc_precision(self, binary):
+    def track_precision(self, binary):
 
         self.count += 1
         self.precision.append(np.zeros(len(binary)))
 
         self.precision[self.count] = (((self.count-1) * self.precision[self.count-1]) + binary)/self.count
 
-        self.recall_data.append(binary)
-
     def track_recall(self, binary):
 
-        self.recall_data.append(binary)
+        self.recall.append(binary)
         self.recall_sums += binary
 
-    def calc_recall(self):
-        pass
+    def calc_precision_recall(self):
+        self.recall = pd.DataFrame(self.recall)
+        self.recall = self.recall.cumsum()/self.recall_sums
+        self.recall = self.recall.fillna(0)
+
+        self.precision = pd.DataFrame(self.precision[1:])
+
+        # Smooth precision by setting each value to the max of it's rightmost values
+        for i in range(self.data_len):
+            self.precision[i] = self.precision.apply(lambda x: max(self.precision.iloc[x.name:, i]), axis=1)
+
+    def calc_mean_ap(self):
+        for i in range(self.data_len):
+            self.AP[i] = scipy.integrate.trapz(self.precision[i], self.recall[i])
+
+        self.mAP = np.average(self.AP)
+
+    def results(self):
+        self.calc_precision_recall()
+        self.calc_mean_ap()
+
+        return self.mAP
 
 
 def save_checkpoint(state, is_best, checkpoint, model_best):
@@ -105,10 +128,7 @@ def record_info(info,filename,mode):
               'Time {batch_time} '
               'Data {data_time} \n'
               'Loss {loss} '
-              # 'Prec@1 {top1} '
-              # 'Prec@5 {top5}\n'
               'LR {lr}\n'.format(batch_time=info['Batch Time'],
-               # data_time=info['Data Time'], loss=info['Loss'], top1=info['Prec@1'], top5=info['Prec@5'],lr=info['lr']))
                data_time=info['Data Time'], loss=info['Loss'], lr=info['lr']))      
         print(result)
 
@@ -121,9 +141,9 @@ def record_info(info,filename,mode):
               'Time {batch_time} \n'
               'Loss {loss} '#.format( batch_time=info['Batch Time'],
                'Prec@1 {top1} '
-               'Prec@5 {top5} \n'.format( batch_time=info['Batch Time'],
-                loss=info['Loss'], top1=info['Prec@1'], top5=info['Prec@5']))
-               # loss=info['Loss']))  
+               'Prec@5 {top5} \n'
+               'Mean Average Precision {mean_average_precision} \n'.format( batch_time=info['Batch Time'],
+                loss=info['Loss'], top1=info['Prec@1'], top5=info['Prec@5'], mean_average_precision=info['Mean Average Precision']))
         print(result)
         df = pd.DataFrame.from_dict(info)
         column_names = ['Epoch','Batch Time','Loss','Prec@1','Prec@5']

@@ -214,13 +214,14 @@ class Spatial_CNN():
                     ap.add(preds[j,:], label[j, :].data.cpu().numpy(), 0.05)
 
         video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
-            
+        mean_average_precision = ap.results()
 
         info = {'Epoch':[self.epoch],
                 'Batch Time':[round(batch_time.avg,3)],
                 'Loss':[np.average(video_loss)],
                 'Prec@1':[video_top1],
-                'Prec@5':[video_top5]}
+                'Prec@5':[video_top5],
+                'Mean Average Precision': mean_average_precision}
         record_info(info, 'record/spatial/rgb_test.csv','test')
         return video_top1, video_loss.mean()
 
