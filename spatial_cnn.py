@@ -118,8 +118,6 @@ class Spatial_CNN():
             #lr_scheduler
             self.scheduler.step(val_loss)
             # save model
-            # if is_best:
-            #     self.best_prec1 = prec1
             with open('record/spatial/spatial_video_preds.pickle','wb') as f:
                 pickle.dump(self.dic_video_level_preds,f)
             f.close()
@@ -189,6 +187,7 @@ class Spatial_CNN():
         losses = AverageMeter()
         top1 = AverageMeter()
         top5 = AverageMeter()
+        ap = mAPMeter()
         # switch to evaluate mode
         self.model.eval()
         self.dic_video_level_preds={}
@@ -200,7 +199,6 @@ class Spatial_CNN():
                 label = label.cuda(non_blocking=True)
                 data_var = Variable(data).cuda(non_blocking=True)
                 label_var = Variable(label).cuda(non_blocking=True)
-
                 # compute output
                 output = self.model(data_var)
                 output = self.lstm(output).view(-1, 26)
@@ -217,15 +215,17 @@ class Spatial_CNN():
                         self.dic_video_level_preds[videoName] = preds[j,:]
                     else:
                         self.dic_video_level_preds[videoName] += preds[j,:]
+                    ap.add(preds[j,:], label[j, :].data.cpu().numpy(), 0.05)
 
         video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
-            
+        mean_average_precision = ap.results()
 
         info = {'Epoch':[self.epoch],
                 'Batch Time':[round(batch_time.avg,3)],
                 'Loss':[np.average(video_loss)],
                 'Prec@1':[video_top1],
-                'Prec@5':[video_top5]}
+                'Prec@5':[video_top5],
+                'Mean Average Precision': mean_average_precision}
         record_info(info, 'record/spatial/rgb_test.csv','test')
         return video_top1, video_loss.mean()
 
@@ -242,6 +242,7 @@ class Spatial_CNN():
         for name in sorted(self.dic_video_level_preds.keys()):
         
             preds = self.dic_video_level_preds[name]
+            preds = preds/preds.sum()
             label = list(self.test_video[name])
             label = np.array(label).astype(np.float64)
                 

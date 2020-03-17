@@ -100,8 +100,8 @@ class Motion_DataLoader():
         self.train_video, self.test_video = splitter.split_video()
         
     def load_frame_count(self):
-        with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
-        # with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        # with open("../../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
+        with open("../bold_data/BOLD_ijcv/BOLD_public/annotations/framecount.pkl", "rb") as f:
             self.frame_count = pickle.load(f)
 
     def run(self):
