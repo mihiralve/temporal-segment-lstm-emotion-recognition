@@ -146,7 +146,7 @@ def record_info(info,filename,mode):
                 loss=info['Loss'], top1=info['Prec@1'], top5=info['Prec@5'], mean_average_precision=info['Mean Average Precision']))
         print(result)
         df = pd.DataFrame.from_dict(info)
-        column_names = ['Epoch','Batch Time','Loss','Prec@1','Prec@5']
+        column_names = ['Epoch','Batch Time','Loss','Prec@1','Prec@5', 'Mean Average Precision']
     
     if not os.path.isfile(filename):
         df.to_csv(filename,index=False,columns=column_names)

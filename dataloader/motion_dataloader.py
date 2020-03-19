@@ -46,9 +46,16 @@ class motion_dataset(Dataset):
             idx = str(idx)
             frame_idx = idx.zfill(6) + "-vis.png"
 
-            img = (Image.open(flow_dir + frame_idx))
-            img = self.transform(img)
-            
+            try:
+                img = (Image.open(flow_dir + frame_idx))
+                img = self.transform(img)
+            except:
+                idx = i + j - 1
+                idx = str(idx)
+                frame_idx = idx.zfill(6) + "-vis.png"
+                img = (Image.open(flow_dir + frame_idx)) # In the event that one frame is corrupted stack the previous frame twice
+                img = self.transform(img)
+
             flow[j-1,:,:] = img
         return flow
 
