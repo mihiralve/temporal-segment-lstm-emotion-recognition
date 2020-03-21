@@ -90,11 +90,12 @@ class Motion_CNN():
         self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
-        self.lstm = LSTM(26, 26, self.batch_size, output_dim=26)
+        self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=1)
 
     def custom_cross_entropy_loss(self, output, target):
         out_sm = nn.Softmax(dim=1)(output)
-        return -(target * torch.log(out_sm))
+        loss = -(target * torch.log(out_sm))
+        return loss.sum()
 
     def resume_and_evaluate(self):
         if self.resume:
@@ -170,11 +171,11 @@ class Motion_CNN():
             loss = self.criterion(output, target_var)
 
             # record loss
-            losses.update(loss.mean().data, data.size(0))
+            losses.update(loss.data, data.size(0))
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
-            loss.mean().backward()
+            loss.backward()
             self.optimizer.step()
 
             # measure elapsed time

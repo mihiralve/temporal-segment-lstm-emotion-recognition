@@ -173,7 +173,7 @@ class Motion_DataLoader():
         val_loader = DataLoader(
             dataset=validation_set, 
             batch_size=self.BATCH_SIZE, 
-            shuffle=False,
+            shuffle=True,
             num_workers=self.num_workers,
             drop_last=True)
 
