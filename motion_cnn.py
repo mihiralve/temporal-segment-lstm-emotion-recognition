@@ -91,6 +91,7 @@ class Motion_CNN():
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
         self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=1)
+        self.lstm_optimizer = torch.optim.SGD(self.lstm.parameters(), self.lr, momentum=0.9)
 
     def custom_cross_entropy_loss(self, output, target):
         out_sm = nn.Softmax(dim=1)(output)
@@ -175,8 +176,10 @@ class Motion_CNN():
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
+            self.lstm_optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+            self.lstm_optimizer.step()
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -204,7 +207,7 @@ class Motion_CNN():
         end = time.time()
         progress = tqdm(self.test_loader)
         with torch.no_grad():
-            for i, (data_dict,label) in enumerate(progress):
+            for i, (video_name, data_dict,label) in enumerate(progress):
 
                 label = label.cuda(non_blocking=True)
                 target_var = Variable(label).cuda()
@@ -224,9 +227,11 @@ class Motion_CNN():
                 # record loss
                 losses.update(loss.data, data.size(0))
 
+                output = nn.Softmax(dim=1)(output[0])
                 for i in range(self.batch_size):
-                    ap.add(output[0][i].cpu().numpy(), target_var[i].cpu().numpy(), 0.1)
-                
+                    ap.add(output[i].cpu().numpy(), target_var[i].cpu().numpy(), 0.1)
+                    self.dic_video_level_preds[video_name[i]] = output[i].cpu().numpy()
+
                 # measure elapsed time
                 batch_time.update(time.time() - end)
                 end = time.time()

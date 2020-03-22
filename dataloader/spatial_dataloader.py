@@ -37,7 +37,7 @@ class spatial_dataset(Dataset):
         nb_clips = int(nb_clips)
         clips = []
 
-        segments = 3
+        segments = 1
         for i in range(segments):
             clips.append(random.randint(int((nb_clips/segments) * i), int((nb_clips/segments) * (i+1) -1)))
             
@@ -51,8 +51,10 @@ class spatial_dataset(Dataset):
             index = clips[i]
             data[key] = self.load_ucf_image(video_name, index)
 
-        sample = (data, label)
-           
+        if self.mode == 'train':
+            sample = (data, label)
+        if self.mode == 'val':
+            sample = (video_name, data, label)
         return sample
 
 class spatial_dataloader():
@@ -124,7 +126,7 @@ class spatial_dataloader():
                 ]))
         
         print('==> Validation data :',len(validation_set),'frames')
-        print(validation_set[1][0]['img0'].size())
+        print(validation_set[1][1]['img0'].size())
 
         val_loader = DataLoader(
             dataset=validation_set, 

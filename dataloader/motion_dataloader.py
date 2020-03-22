@@ -80,7 +80,11 @@ class motion_dataset(Dataset):
             key = 'opf'+str(i)
             self.clips_idx = clips[i]
             data[key] = self.stackopf()
-        sample = (data,label)
+
+        if self.mode == 'train':
+            sample = (data, label)
+        if self.mode == 'val':
+            sample = (self.video, data, label)
 
         return sample
 
@@ -155,7 +159,7 @@ class Motion_DataLoader():
             transforms.Grayscale(),
             transforms.ToTensor(),
             ]))
-        print('==> Validation data :',len(validation_set),' frames',validation_set[1][0]['opf0'].size())
+        print('==> Validation data :',len(validation_set),' frames',validation_set[1][1]['opf0'].size())
         #print validation_set[1]
 
         val_loader = DataLoader(

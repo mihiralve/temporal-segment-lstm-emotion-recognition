@@ -200,7 +200,7 @@ class Spatial_CNN():
         end = time.time()
         progress = tqdm(self.test_loader)
         with torch.no_grad():
-            for i, (data_dict,label) in enumerate(progress):
+            for i, (video_name, data_dict,label) in enumerate(progress):
                 label = label.cuda(non_blocking=True)
                 target_var = Variable(label).cuda()
 
@@ -219,9 +219,11 @@ class Spatial_CNN():
                 # record loss
                 losses.update(loss.data, data.size(0))
 
+                output = nn.Softmax(dim=1)(output[0])
                 for i in range(self.batch_size):
-                    ap.add(output[0][i].cpu().numpy(), target_var[i].cpu().numpy(), 0.1)
-
+                    pred = output[i].cpu().numpy()
+                    ap.add(pred, target_var[i].cpu().numpy(), 0.1)
+                    self.dic_video_level_preds[video_name[i]] = pred
 
                 # measure elapsed time
                 batch_time.update(time.time() - end)

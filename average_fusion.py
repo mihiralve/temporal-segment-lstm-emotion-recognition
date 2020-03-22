@@ -33,27 +33,30 @@ if __name__ == '__main__':
     top1=0
     top5=0
     ii=0
-    for name in sorted(rgb.keys()):
-        r = rgb[name]
-        o = opf[name]
+    for name in test_video:
+        try:
+            r = rgb[name]
+            o = opf[name]
 
-        #label = int(test_video[name])-1
-        label = list(test_video[name])
-        label = np.array(label).astype(np.float64)
+            #label = int(test_video[name])-1
+            label = list(test_video[name])
+            label = np.array(label).astype(np.float64)
 
-        preds = (r+o)/sum((r+o))
+            preds = (r+o)/sum((r+o))
 
-        video_level_preds[ii,:] = preds
-        video_level_labels[ii,:] = label
-        ii+=1
+            video_level_preds[ii,:] = preds
+            video_level_labels[ii,:] = label
+            ii+=1
 
 
-        if np.average(np.abs(preds-label)) < 0.01:
-                top1 += 1
-        if np.average(np.abs(preds-label)) < 0.05:
-                top5 += 1
+            if np.average(np.abs(preds-label)) < 0.01:
+                    top1 += 1
+            if np.average(np.abs(preds-label)) < 0.05:
+                    top5 += 1
 
-        ap.add(preds, label, 0.05)
+            ap.add(preds, label, 0.05)
+        except:
+            pass
 
     video_level_labels = torch.from_numpy(video_level_labels).long()
     video_level_preds = torch.from_numpy(video_level_preds).float()
