@@ -83,6 +83,8 @@ class Spatial_CNN():
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
         self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=1)
+        self.lstm_optimizer = torch.optim.SGD(self.lstm.parameters(), self.lr, momentum=0.9)
+
 
     def custom_cross_entropy_loss(self, output, target):
         out_sm = nn.Softmax(dim=1)(output)
@@ -168,8 +170,10 @@ class Spatial_CNN():
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
+            self.lstm_optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+            self.lstm_optimizer.step()
 
             # measure elapsed time
             batch_time.update(time.time() - end)
