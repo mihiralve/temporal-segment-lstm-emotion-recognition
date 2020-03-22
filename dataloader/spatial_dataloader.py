@@ -33,37 +33,25 @@ class spatial_dataset(Dataset):
 
     def __getitem__(self, idx):
 
-        if self.mode == 'train':
-            video_name, nb_clips = list(self.keys)[idx].split(' ')
-            nb_clips = int(nb_clips)
-            clips = []
+        video_name, nb_clips = list(self.keys)[idx].split(' ')
+        nb_clips = int(nb_clips)
+        clips = []
 
-            segments = 1
-            for i in range(segments):
-                clips.append(random.randint(int((nb_clips/segments) * i), int((nb_clips/segments) * (i+1) -1)))
+        segments = 3
+        for i in range(segments):
+            clips.append(random.randint(int((nb_clips/segments) * i), int((nb_clips/segments) * (i+1) -1)))
             
-        elif self.mode == 'val':
-            video_name, index = list(self.keys)[idx].split(' ')
-            index =abs(int(index))
-        else:
-            raise ValueError('There are only train and val mode')
 
         label = list(self.values)[idx]
         label = np.array(label).astype(np.float64)
+        data ={}
         
-        if self.mode=='train':
-            data ={}
-            for i in range(len(clips)):
-                key = 'img'+str(i)
-                index = clips[i]
-                data[key] = self.load_ucf_image(video_name, index)
-                    
-            sample = (data, label)
-        elif self.mode=='val':
-            data = self.load_ucf_image(video_name,index)
-            sample = (video_name, data, label)
-        else:
-            raise ValueError('There are only train and val mode')
+        for i in range(len(clips)):
+            key = 'img'+str(i)
+            index = clips[i]
+            data[key] = self.load_ucf_image(video_name, index)
+
+        sample = (data, label)
            
         return sample
 
@@ -106,13 +94,9 @@ class spatial_dataloader():
         print('==> sampling testing frames')
         self.dic_testing={}
         for video in self.test_video:
-            # nb_frame = self.frame_count[video]-10+1
-            nb_frame = self.frame_count[video]-10+1
-            interval = int(nb_frame/19)
-            for i in range(19):
-                frame = i*interval
-                key = video+ ' '+str(frame)
-                self.dic_testing[key] = self.test_video[video]      
+            nb_frame = self.frame_count[video]
+            key = video+ ' '+str(nb_frame)
+            self.dic_testing[key] = self.test_video[video]
 
     def train(self):
         training_set = spatial_dataset(dic=self.dic_training, root_dir=self.data_path, mode='train', transform = transforms.Compose([
@@ -140,7 +124,7 @@ class spatial_dataloader():
                 ]))
         
         print('==> Validation data :',len(validation_set),'frames')
-        print(validation_set[1][1].size())
+        print(validation_set[1][0]['img0'].size())
 
         val_loader = DataLoader(
             dataset=validation_set, 
