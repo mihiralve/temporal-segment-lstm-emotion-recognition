@@ -204,43 +204,44 @@ class Motion_CNN():
         end = time.time()
         progress = tqdm(self.test_loader)
         with torch.no_grad():
-            for i, (keys,data,label) in enumerate(progress):
+            for i, (data_dict,label) in enumerate(progress):
 
                 label = label.cuda(non_blocking=True)
-                data_var = Variable(data).cuda(non_blocking=True)
-                label_var = Variable(label).cuda(non_blocking=True)
+                target_var = Variable(label).cuda()
 
                 # compute output
-                output = self.model(data_var)
-                output = self.lstm(output).view(-1, 26)
-                output = nn.Softmax(dim=1)(output)
+                output = Variable(torch.zeros(len(data_dict['opf0']),26).float()).cuda()
+                for i in range(len(data_dict)):
+                    key = 'opf'+str(i)
+                    data = data_dict[key]
+                    input_var = Variable(data).cuda()
+                    output += self.model(input_var)
 
+                    output = self.lstm(output).view(-1, self.batch_size, 26)
+
+                loss = self.criterion(output, target_var)
+
+                # record loss
+                losses.update(loss.data, data.size(0))
+
+                for i in range(self.batch_size):
+                    ap.add(output[0][i].cpu().numpy(), target_var[i].cpu().numpy(), 0.1)
+                
                 # measure elapsed time
                 batch_time.update(time.time() - end)
                 end = time.time()
-                #Calculate video level prediction
-                preds = output.data.cpu().numpy()
-                nb_data = preds.shape[0]
-                for j in range(nb_data):
-                    videoName = keys[j].split('-',1)[0] # ApplyMakeup_g01_c01
-                    if videoName not in self.dic_video_level_preds.keys():
-                        self.dic_video_level_preds[videoName] = preds[j,:]
-                    else:
-                        self.dic_video_level_preds[videoName] += preds[j,:]
-                    ap.add(preds[j,:], label[j, :].data.cpu().numpy(), 0.05)
-                    
+
         #Frame to video level accuracy
-        video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
         mean_average_precision = ap.results()
 
         info = {'Epoch':[self.epoch],
                 'Batch Time':[round(batch_time.avg,3)],
-                'Loss':[np.average(video_loss)],
-                'Prec@1':[video_top1],
-                'Prec@5':[video_top5],
+                'Loss':[losses.avg.item()],
+                'Prec@1':[0],
+                'Prec@5':[0],
                 'Mean Average Precision': mean_average_precision}
         record_info(info, 'record/motion/opf_test.csv','test')
-        return video_top1, video_loss.mean()
+        return mean_average_precision, losses.avg.item()
 
     def frame2_video_level_accuracy(self):
      

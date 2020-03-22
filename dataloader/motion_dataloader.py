@@ -65,32 +65,23 @@ class motion_dataset(Dataset):
     def __getitem__(self, idx):
         #print ('mode:',self.mode,'calling Dataset:__getitem__ @ idx=%d'%idx)
         
-        if self.mode == 'train':
-            self.video, nb_clips = list(self.keys)[idx].split(':')
-            clips = []
-            segments = 1
-            for i in range(segments):
-                clips.append(random.randint(int((int(nb_clips)/segments) * i), int((int(nb_clips)/segments) * (i+1) -1)))
-        elif self.mode == 'val':
-            self.video,self.clips_idx = list(self.keys)[idx].split(':')
-        else:
-            raise ValueError('There are only train and val mode')
+        self.video, nb_clips = list(self.keys)[idx].split(':')
+        clips = []
+        segments = 1
+        for i in range(segments):
+            clips.append(random.randint(int((int(nb_clips)/segments) * i), int((int(nb_clips)/segments) * (i+1) -1)))
 
         label = list(self.values)[idx]
         label = np.array(label).astype(np.float64)
+        data = {}
 
-        if self.mode == 'train':
-            data = {}
-            for i in range(len(clips)):
-                key = 'opf'+str(i)
-                self.clips_idx = clips[i]
-                data[key] = self.stackopf()
-            sample = (data,label)
-        elif self.mode == 'val':
-            data = self.stackopf()
-            sample = (self.video,data,label)
-        else:
-            raise ValueError('There are only train and val mode')
+
+        for i in range(len(clips)):
+            key = 'opf'+str(i)
+            self.clips_idx = clips[i]
+            data[key] = self.stackopf()
+        sample = (data,label)
+
         return sample
 
 
@@ -121,15 +112,12 @@ class Motion_DataLoader():
         return train_loader, val_loader, self.test_video
             
     def val_sample19(self):
-        self.dic_test_idx = {}
-        #print len(self.test_video)
+        print('==> sampling testing frames')
+        self.dic_test_idx={}
         for video in self.test_video:
-
-            sampling_interval = int((self.frame_count[video]-10+1)/19)
-            for index in range(19):
-                clip_idx = index*sampling_interval
-                key = video + ':' + str(clip_idx+1)
-                self.dic_test_idx[key] = self.test_video[video]
+            nb_frame = self.frame_count[video]-10+1
+            key = video+ ':'+str(nb_frame)
+            self.dic_test_idx[key] = self.test_video[video]
              
     def get_training_dic(self):
         self.dic_video_train={}
@@ -167,7 +155,7 @@ class Motion_DataLoader():
             transforms.Grayscale(),
             transforms.ToTensor(),
             ]))
-        print('==> Validation data :',len(validation_set),' frames',validation_set[1][1].size())
+        print('==> Validation data :',len(validation_set),' frames',validation_set[1][0]['opf0'].size())
         #print validation_set[1]
 
         val_loader = DataLoader(
