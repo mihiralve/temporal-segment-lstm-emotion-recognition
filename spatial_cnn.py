@@ -159,7 +159,7 @@ class Spatial_CNN():
                 key = 'img'+str(i)
                 data = data_dict[key]
                 input_var = Variable(data).cuda()
-                output += self.model(input_var)
+                output = self.model(input_var)
 
                 output = self.lstm(output).view(-1, self.batch_size, 26)
 
@@ -210,7 +210,7 @@ class Spatial_CNN():
                     key = 'img'+str(i)
                     data = data_dict[key]
                     input_var = Variable(data).cuda()
-                    output += self.model(input_var)
+                    output = self.model(input_var)
 
                     output = self.lstm(output).view(-1, self.batch_size, 26)
 

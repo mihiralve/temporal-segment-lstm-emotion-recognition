@@ -37,7 +37,7 @@ class spatial_dataset(Dataset):
         nb_clips = int(nb_clips)
         clips = []
 
-        segments = 1
+        segments = 5
         for i in range(segments):
             clips.append(random.randint(int((nb_clips/segments) * i), int((nb_clips/segments) * (i+1) -1)))
             

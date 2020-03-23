@@ -166,7 +166,8 @@ class Motion_CNN():
                 key = 'opf'+str(i)
                 data = data_dict[key]
                 input_var = Variable(data).cuda()
-                output += self.model(input_var)
+                output = self.model(input_var)
+
                 output = self.lstm(output).view(-1, self.batch_size, 26)
 
             loss = self.criterion(output, target_var)
@@ -218,7 +219,7 @@ class Motion_CNN():
                     key = 'opf'+str(i)
                     data = data_dict[key]
                     input_var = Variable(data).cuda()
-                    output += self.model(input_var)
+                    output = self.model(input_var)
 
                     output = self.lstm(output).view(-1, self.batch_size, 26)
 

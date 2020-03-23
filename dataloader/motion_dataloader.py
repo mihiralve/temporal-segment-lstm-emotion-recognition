@@ -67,7 +67,7 @@ class motion_dataset(Dataset):
         
         self.video, nb_clips = list(self.keys)[idx].split(':')
         clips = []
-        segments = 1
+        segments = 5
         for i in range(segments):
             clips.append(random.randint(int((int(nb_clips)/segments) * i), int((int(nb_clips)/segments) * (i+1) -1)))
 
