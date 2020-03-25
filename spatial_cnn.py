@@ -73,16 +73,22 @@ class Spatial_CNN():
         self.test_loader=test_loader
         self.best_prec1=0
         self.test_video=test_video
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     def build_model(self):
         print('==> Build model and setup loss and optimizer')
         #build model
-        self.model = resnet101(pretrained= True, channel=3).cuda()
+        self.model = resnet101(pretrained= True, channel=3)
+        self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=1)
+        if torch.cuda.device_count() > 1:
+            self.model = nn.DataParallel(self.model)
+            self.lstm = nn.DataParallel(self.lstm)
+        self.model.to(self.device)
+        self.lstm.to(self.device)
         #Loss function and optimizer
         self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
         self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
-        self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=1)
         self.lstm_optimizer = torch.optim.SGD(self.lstm.parameters(), self.lr, momentum=0.9)
 
 
@@ -150,15 +156,15 @@ class Spatial_CNN():
             # measure data loading time
             data_time.update(time.time() - end)
             
-            label = label.cuda(non_blocking=True)
-            target_var = Variable(label).cuda()
+            label = label.to(self.device)
+            target_var = Variable(label).to(self.device)
 
             # compute output
-            output = Variable(torch.zeros(len(data_dict['img0']),26).float()).cuda()
+            output = Variable(torch.zeros(len(data_dict['img0']),26).float()).to(self.device)
             for i in range(len(data_dict)):
                 key = 'img'+str(i)
                 data = data_dict[key]
-                input_var = Variable(data).cuda()
+                input_var = Variable(data).to(self.device)
                 output = self.model(input_var)
 
                 output = self.lstm(output).view(-1, self.batch_size, 26)
@@ -201,15 +207,15 @@ class Spatial_CNN():
         progress = tqdm(self.test_loader)
         with torch.no_grad():
             for i, (video_name, data_dict,label) in enumerate(progress):
-                label = label.cuda(non_blocking=True)
-                target_var = Variable(label).cuda()
+                label = label.to(self.device)
+                target_var = Variable(label).to(self.device)
 
                 # compute output
-                output = Variable(torch.zeros(len(data_dict['img0']),26).float()).cuda()
+                output = Variable(torch.zeros(len(data_dict['img0']),26).float()).to(self.device)
                 for i in range(len(data_dict)):
                     key = 'img'+str(i)
                     data = data_dict[key]
-                    input_var = Variable(data).cuda()
+                    input_var = Variable(data).to(self.device)
                     output = self.model(input_var)
 
                     output = self.lstm(output).view(-1, self.batch_size, 26)
@@ -273,7 +279,7 @@ class Spatial_CNN():
         video_level_labels = torch.from_numpy(video_level_labels).float()
         video_level_preds = torch.from_numpy(video_level_preds).float()
             
-        loss = self.criterion(Variable(video_level_preds).cuda(), Variable(video_level_labels).cuda())     
+        loss = self.criterion(Variable(video_level_preds).to(self.device), Variable(video_level_labels).to(self.device))
 
         return top1,top5,loss.data.cpu().numpy()
 
