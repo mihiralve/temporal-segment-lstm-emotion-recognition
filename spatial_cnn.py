@@ -88,8 +88,8 @@ class Spatial_CNN():
         #Loss function and optimizer
         self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
-        self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
         self.lstm_optimizer = torch.optim.SGD(self.lstm.parameters(), self.lr, momentum=0.9)
+        self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=5,verbose=True)
 
 
     def custom_cross_entropy_loss(self, output, target):

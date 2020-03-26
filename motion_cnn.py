@@ -85,7 +85,7 @@ class Motion_CNN():
     def build_model(self):
         print ('==> Build model and setup loss and optimizer')
         #build model
-        self.model = resnet101(pretrained= True, channel=3)
+        self.model = resnet101(pretrained= True, channel=10)
         self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=1)
         if torch.cuda.device_count() > 1:
             self.model = nn.DataParallel(self.model)
@@ -96,8 +96,8 @@ class Motion_CNN():
         #Loss function and optimizer
         self.criterion = self.custom_cross_entropy_loss #nn.CrossEntropyLoss().cuda()
         self.optimizer = torch.optim.SGD(self.model.parameters(), self.lr, momentum=0.9)
-        self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=1,verbose=True)
         self.lstm_optimizer = torch.optim.SGD(self.lstm.parameters(), self.lr, momentum=0.9)
+        self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', patience=5,verbose=True)
 
     def custom_cross_entropy_loss(self, output, target):
         out_sm = nn.Softmax(dim=1)(output)
@@ -163,7 +163,7 @@ class Motion_CNN():
             # measure data loading time
             data_time.update(time.time() - end)
             
-            label = label..to(self.device)
+            label = label.to(self.device)
             target_var = Variable(label).to(self.device)
 
             # compute output

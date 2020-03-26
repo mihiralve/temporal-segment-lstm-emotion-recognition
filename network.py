@@ -250,14 +250,14 @@ class LSTM(nn.Module):
         self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers).cuda()
         self.linear = nn.Linear(self.hidden_dim, self.output_dim).cuda()
 
-    def init_hidden(self):
-        return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim),
-                torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
+    # def init_hidden(self):
+    #     return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim),
+    #             torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
 
     def forward(self, input):
-        lstm_out, self.hidden = self.lstm(input.view(-1, self.batch_size, 26))
+        lstm_out, self.hidden = self.lstm(input.view(-1, input.shape[0], 26))
 
-        y_pred = self.linear(lstm_out[-1].view(self.batch_size, -1))
+        y_pred = self.linear(lstm_out[-1].view(input.shape[0], -1))
         return y_pred.view(-1)
 
 #Test network
