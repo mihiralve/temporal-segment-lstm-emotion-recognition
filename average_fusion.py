@@ -27,6 +27,8 @@ if __name__ == '__main__':
     train_loader,val_loader,test_video = data_loader.run()
 
     ap = mAPMeter()
+    ap_r = mAPMeter()
+    ap_o = mAPMeter()
     video_level_preds = np.zeros((len(rgb.keys()),26))
     video_level_labels = np.zeros((len(rgb.keys()),26))
     correct=0
@@ -49,16 +51,46 @@ if __name__ == '__main__':
             ii+=1
 
 
-            if np.average(np.abs(preds-label)) < 0.01:
-                    top1 += 1
-            if np.average(np.abs(preds-label)) < 0.05:
-                    top5 += 1
-
             ap.add(preds, label, 0.05)
+            ap_r.add(r, label, 0.05)
+            ap_o.add(o, label, 0.05)
         except:
             pass
 
-    video_level_labels = torch.from_numpy(video_level_labels).long()
-    video_level_preds = torch.from_numpy(video_level_preds).float()
+    print("rgb:" + str(ap_r.results()))
+    print("opf:" + str(ap_o.results()))
+    print("avg:" + str(ap.results()))
 
-    print(ap.results())
+    cols = ['Peace', 'Affection', 'Esteem', 'Anticipation', 'Engagement',
+       'Confidence', 'Happiness', 'Pleasure', 'Excitement', 'Surprise',
+       'Sympathy', 'Doubt/Confusion', 'Disconnection', 'Fatigue',
+       'Embarrasment', 'Yearning', 'Disapproval', 'Aversion', 'Annoyance',
+       'Anger', 'Sensitivity', 'Sadness', 'Disquietment', 'Fear', 'Pain',
+       'Suffering']
+
+    if not os.path.exists("record/graphs/"):
+        os.mkdir("record/graphs/")
+
+    plt.figure()
+    plt.ylim(0, 1)
+    plt.bar(cols, ap.AP)
+    plt.xticks(rotation=90)
+    plt.title("Average")
+    plt.tight_layout()
+    plt.savefig("record/graphs/categorical_ap.png")
+
+    plt.figure()
+    plt.ylim(0, 1)
+    plt.bar(cols, ap_r.AP)
+    plt.xticks(rotation=90)
+    plt.title("Spatial Stream")
+    plt.tight_layout()
+    plt.savefig("record/graphs/categorical_ap_r.png")
+
+    plt.figure()
+    plt.ylim(0, 1)
+    plt.bar(cols, ap_o.AP)
+    plt.xticks(rotation=90)
+    plt.title("Temporal Stream")
+    plt.tight_layout()
+    plt.savefig("record/graphs/categorical_ap_o.png")
