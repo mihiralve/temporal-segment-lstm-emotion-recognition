@@ -86,7 +86,7 @@ class Motion_CNN():
         print ('==> Build model and setup loss and optimizer')
         #build model
         self.model = resnet101(pretrained= True, channel=10)
-        self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=1)
+        self.lstm = LSTM(26, 26, self.batch_size, output_dim=26, num_layers=2)
         if torch.cuda.device_count() > 1:
             self.model = nn.DataParallel(self.model)
             self.lstm = nn.DataParallel(self.lstm)

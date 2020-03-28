@@ -102,7 +102,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, nb_classes=101, channel=20):
+    def __init__(self, block, layers, nb_classes=101, channel=20, dropout=0.5):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.conv1_custom = nn.Conv2d(channel, 64, kernel_size=7, stride=2, padding=3,   
@@ -114,6 +114,7 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.dropout = nn.Dropout(dropout)
         self.avgpool = nn.AvgPool2d(7)
         self.fc_custom = nn.Linear(512 * block.expansion, nb_classes)
         for m in self.modules():
@@ -145,6 +146,7 @@ class ResNet(nn.Module):
         x = self.conv1_custom(x)
         x = self.bn1(x)
         x = self.relu(x)
+        x = self.dropout(x)
         x = self.maxpool(x)
 
         x = self.layer1(x)
@@ -239,7 +241,7 @@ def weight_transform(model_dict, pretrain_dict, channel):
     return model_dict
 
 class LSTM(nn.Module):
-    def __init__(self, input_dim, hidden_dim, batch_size, output_dim=1, num_layers=2):
+    def __init__(self, input_dim, hidden_dim, batch_size, output_dim=1, num_layers=2, dropout=0.5):
         super(LSTM, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -247,7 +249,7 @@ class LSTM(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_layers
 
-        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers).cuda()
+        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers, dropout=dropout).cuda()
         self.linear = nn.Linear(self.hidden_dim, self.output_dim).cuda()
 
     # def init_hidden(self):
