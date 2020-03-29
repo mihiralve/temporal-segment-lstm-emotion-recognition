@@ -102,7 +102,7 @@ class spatial_dataloader():
 
     def train(self):
         training_set = spatial_dataset(dic=self.dic_training, root_dir=self.data_path, mode='train', transform = transforms.Compose([
-                transforms.Resize([346,346]), ## Shape errors unless I do it this way
+                transforms.Resize([350,350]), ## Shape errors unless I do it this way
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225]) ##Do I need to change the normalization constants
@@ -120,7 +120,7 @@ class spatial_dataloader():
 
     def validate(self):
         validation_set = spatial_dataset(dic=self.dic_testing, root_dir=self.data_path, mode='val', transform = transforms.Compose([
-                transforms.Resize([346,346]), ## Shape errors unless I do it this way
+                transforms.Resize([350,350]), ## Shape errors unless I do it this way
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
                 ]))

@@ -27,8 +27,8 @@ class motion_dataset(Dataset):
         self.transform = transform
         self.mode=mode
         self.in_channel = in_channel
-        self.img_rows=320
-        self.img_cols=320
+        self.img_rows=350
+        self.img_cols=350
 
     def stackopf(self):
         name = self.video
@@ -135,7 +135,7 @@ class Motion_DataLoader():
         training_set = motion_dataset(dic=self.dic_video_train, in_channel=self.in_channel, root_dir=self.data_path,
             mode='train',
             transform = transforms.Compose([
-            transforms.Scale([320,320]),
+            transforms.Scale([350,350]),
             transforms.Grayscale(),
             transforms.ToTensor(),
             ]))
@@ -155,7 +155,7 @@ class Motion_DataLoader():
         validation_set = motion_dataset(dic= self.dic_test_idx, in_channel=self.in_channel, root_dir=self.data_path ,
             mode ='val',
             transform = transforms.Compose([
-            transforms.Scale([320,320]),
+            transforms.Scale([350,350]),
             transforms.Grayscale(),
             transforms.ToTensor(),
             ]))
