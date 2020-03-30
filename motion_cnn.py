@@ -178,6 +178,12 @@ class Motion_CNN():
 
             loss = self.criterion(output, target_var)
 
+            lambda_val = torch.tensor(1.).to(self.device)
+            l2_reg = torch.tensor(0.).to(self.device)
+            for param in self.model.parameters():
+                l2_reg += torch.norm(param)
+            loss += lambda_val * l2_reg
+
             # record loss
             losses.update(loss.data, data.size(0))
 
@@ -230,6 +236,12 @@ class Motion_CNN():
                     output = self.lstm(output).view(-1, self.batch_size, 26)
 
                 loss = self.criterion(output, target_var)
+
+                lambda_val = torch.tensor(1.).to(self.device)
+                l2_reg = torch.tensor(0.).to(self.device)
+                for param in self.model.parameters():
+                    l2_reg += torch.norm(param)
+                loss += lambda_val * l2_reg
 
                 # record loss
                 losses.update(loss.data, data.size(0))

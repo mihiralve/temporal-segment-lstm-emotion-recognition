@@ -152,10 +152,10 @@ class Spatial_CNN():
         progress = tqdm(self.train_loader)
         for i, (data_dict,label) in enumerate(progress):
 
-    
+
             # measure data loading time
             data_time.update(time.time() - end)
-            
+
             label = label.to(self.device)
             target_var = Variable(label).to(self.device)
 
@@ -165,21 +165,27 @@ class Spatial_CNN():
                 key = 'img'+str(i)
                 data = data_dict[key]
                 input_var = Variable(data).to(self.device)
-                output = self.model(input_var)
+                output += self.model(input_var)
 
-                output = self.lstm(output).view(-1, self.batch_size, 26)
+                #output = self.lstm(output).view(-1, self.batch_size, 26)
 
-            loss = self.criterion(output, target_var)
+            loss = self.criterion(output/len(data_dict), target_var)
+
+            lambda_val = torch.tensor(1.).to(self.device)
+            l2_reg = torch.tensor(0.).to(self.device)
+            for param in self.model.parameters():
+                l2_reg += torch.norm(param)
+            loss += lambda_val * l2_reg
 
             # record loss
             losses.update(loss.data, data.size(0))
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
-            self.lstm_optimizer.zero_grad()
+            #self.lstm_optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            self.lstm_optimizer.step()
+            #self.lstm_optimizer.step()
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -216,16 +222,22 @@ class Spatial_CNN():
                     key = 'img'+str(i)
                     data = data_dict[key]
                     input_var = Variable(data).to(self.device)
-                    output = self.model(input_var)
+                    output += self.model(input_var)
+                output = output/len(data_dict)
+                    #output = self.lstm(output).view(-1, self.batch_size, 26)
 
-                    output = self.lstm(output).view(-1, self.batch_size, 26)
+                loss = self.criterion(output/len(data_dict), target_var)
 
-                loss = self.criterion(output, target_var)
+                lambda_val = torch.tensor(1.).to(self.device)
+                l2_reg = torch.tensor(0.).to(self.device)
+                for param in self.model.parameters():
+                    l2_reg += torch.norm(param)
+                loss += lambda_val * l2_reg
 
                 # record loss
                 losses.update(loss.data, data.size(0))
 
-                output = nn.Softmax(dim=1)(output[0])
+                output = nn.Softmax(dim=1)(output)
                 for i in range(self.batch_size):
                     pred = output[i].cpu().numpy()
                     ap.add(pred, target_var[i].cpu().numpy(), 0.1)
