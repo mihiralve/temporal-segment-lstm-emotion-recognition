@@ -237,6 +237,9 @@ class Spatial_CNN():
                 for param in self.model.parameters():
                     l2_reg += torch.norm(param)
                 loss += lambda_val * l2_reg
+                for param in self.lstm.parameters():
+                l2_reg += torch.norm(param)
+                loss += lambda_val * l2_reg
 
                 # record loss
                 losses.update(loss.data, data.size(0))
