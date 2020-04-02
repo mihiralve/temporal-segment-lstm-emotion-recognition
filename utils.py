@@ -116,10 +116,11 @@ class mAPMeter():
         return self.mAP
 
 
-def save_checkpoint(state, is_best, checkpoint, model_best):
-    torch.save(state, checkpoint)
-    if is_best:
-        shutil.copyfile(checkpoint, model_best)
+def save_checkpoint(cnn_state, lstm_state, cnn_checkpoint, lstm_checkpoint, model_best, lstm_best):
+    torch.save(cnn_state, cnn_checkpoint)
+    torch.save(lstm_state, lstm_checkpoint)
+    shutil.copyfile(cnn_checkpoint, model_best)
+    shutil.copyfile(lstm_checkpoint, lstm_best)
 
 def record_info(info,filename,mode):
 

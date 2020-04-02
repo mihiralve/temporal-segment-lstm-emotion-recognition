@@ -29,7 +29,8 @@ parser.add_argument('--epochs', default=500, type=int, metavar='N', help='number
 parser.add_argument('--batch-size', default=64, type=int, metavar='N', help='mini-batch size (default: 64)')
 parser.add_argument('--lr', default=1e-6, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
-parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
+parser.add_argument('--resume-cnn', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
+parser.add_argument('--resume-lstm', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
 
 def main():
@@ -55,7 +56,8 @@ def main():
                         test_loader=test_loader,
                         # Utility
                         start_epoch=arg.start_epoch,
-                        resume=arg.resume,
+                        resume_cnn=arg.resume_cnn,
+                        resume_lstm=arg.resume_lstm,
                         evaluate=arg.evaluate,
                         # Hyper-parameter
                         nb_epochs=arg.epochs,
@@ -68,11 +70,12 @@ def main():
     model.run()
 
 class Motion_CNN():
-    def __init__(self, nb_epochs, lr, batch_size, resume, start_epoch, evaluate, train_loader, test_loader, channel,test_video):
+    def __init__(self, nb_epochs, lr, batch_size, resume_cnn, resume_lstm, start_epoch, evaluate, train_loader, test_loader, channel,test_video):
         self.nb_epochs=nb_epochs
         self.lr=lr
         self.batch_size=batch_size
-        self.resume=resume
+        self.resume_cnn=resume_cnn
+        self.resume_lstm=resume_lstm
         self.start_epoch=start_epoch
         self.evaluate=evaluate
         self.train_loader=train_loader
@@ -105,18 +108,28 @@ class Motion_CNN():
         return loss.sum()
 
     def resume_and_evaluate(self):
-        if self.resume:
-            if os.path.isfile(self.resume):
-                print("==> loading checkpoint '{}'".format(self.resume))
-                checkpoint = torch.load(self.resume)
+        if self.resume_cnn:
+            if os.path.isfile(self.resume_cnn):
+                print("==> loading checkpoint '{}'".format(self.resume_cnn))
+                checkpoint = torch.load(self.resume_cnn)
                 self.start_epoch = checkpoint['epoch']
                 self.best_prec1 = checkpoint['best_prec1']
                 self.model.load_state_dict(checkpoint['state_dict'])
                 self.optimizer.load_state_dict(checkpoint['optimizer'])
                 print("==> loaded checkpoint '{}' (epoch {}) (best_prec1 {})"
-                  .format(self.resume, checkpoint['epoch'], self.best_prec1))
+                  .format(self.resume_cnn, checkpoint['epoch'], self.best_prec1))
             else:
-                print("==> no checkpoint found at '{}'".format(self.resume))
+                print("==> no checkpoint found at '{}'".format(self.resume_cnn))
+        if self.resume_lstm:
+            if os.path.isfile(self.resume_lstm):
+                print("==> loading checkpoint '{}'".format(self.resume_lstm))
+                checkpoint = torch.load(self.resume_lstm)
+                self.lstm.load_state_dict(checkpoint['state_dict'])
+                self.lstm_optimizer.load_state_dict(checkpoint['optimizer'])
+                print("==> loaded checkpoint '{}' (epoch {}) (best_prec1 {})"
+                  .format(self.resume_lstm, checkpoint['epoch'], self.best_prec1))
+            else:
+                print("==> no checkpoint found at '{}'".format(self.resume_lstm))
         if self.evaluate:
             self.epoch=0
             prec1, val_loss = self.validate_1epoch()
@@ -142,8 +155,17 @@ class Motion_CNN():
                 'epoch': self.epoch,
                 'state_dict': self.model.state_dict(),
                 'best_prec1': self.best_prec1,
-                'optimizer' : self.optimizer.state_dict()
-            },is_best,'record/motion/checkpoint.pth.tar','record/motion/model_best.pth.tar')
+                'optimizer' : self.optimizer.state_dict(),
+            },{
+                'epoch': self.epoch,
+                'state_dict': self.lstm.state_dict(),
+                'best_prec1': self.best_prec1,
+                'optimizer' : self.lstm_optimizer.state_dict()
+                },
+                'record/motion/checkpoint.pth.tar',
+                'record/motion/lstm_checkpoint.pth.tar',
+                'record/motion/model_best.pth.tar',
+                'record/motion/lstm_best.pth.tar')
 
     def train_1epoch(self):
         print('==> Epoch:[{0}/{1}][training stage]'.format(self.epoch, self.nb_epochs))
