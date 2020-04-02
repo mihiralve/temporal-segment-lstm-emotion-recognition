@@ -177,6 +177,8 @@ class Spatial_CNN():
                 l2_reg += torch.norm(param)
             loss += lambda_val * l2_reg
 
+            lambda_val = torch.tensor(1.).to(self.device)
+            l2_reg = torch.tensor(0.).to(self.device)
             for param in self.lstm.parameters():
                 l2_reg += torch.norm(param)
             loss += lambda_val * l2_reg
@@ -237,8 +239,12 @@ class Spatial_CNN():
                 for param in self.model.parameters():
                     l2_reg += torch.norm(param)
                 loss += lambda_val * l2_reg
+
+                lambda_val = torch.tensor(1.).to(self.device)
+                l2_reg = torch.tensor(0.).to(self.device)
                 for param in self.lstm.parameters():
-                l2_reg += torch.norm(param)
+                    l2_reg += torch.norm(param)
+                    loss += lambda_val * l2_reg
                 loss += lambda_val * l2_reg
 
                 # record loss

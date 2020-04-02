@@ -184,6 +184,8 @@ class Motion_CNN():
                 l2_reg += torch.norm(param)
             loss += lambda_val * l2_reg
 
+            lambda_val = torch.tensor(1.).to(self.device)
+            l2_reg = torch.tensor(0.).to(self.device)
             for param in self.lstm.parameters():
                 l2_reg += torch.norm(param)
             loss += lambda_val * l2_reg
@@ -247,6 +249,8 @@ class Motion_CNN():
                     l2_reg += torch.norm(param)
                 loss += lambda_val * l2_reg
 
+                lambda_val = torch.tensor(1.).to(self.device)
+                l2_reg = torch.tensor(0.).to(self.device)
                 for param in self.lstm.parameters():
                     l2_reg += torch.norm(param)
                 loss += lambda_val * l2_reg
